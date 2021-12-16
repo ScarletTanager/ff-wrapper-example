@@ -1,0 +1,7 @@
+*.o
+*.a
+*.so
+*.bundle
+*.pyc
+*_wrap.*
+src/swig/ruby/Makefile
