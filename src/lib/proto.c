@@ -1,5 +1,53 @@
 #include "proto.h"
 
+channel channel_create(int num) {
+  channel chan = (channel)malloc(sizeof(struct proto_channel));
+  chan->buf = malloc(num);
+  memset(chan->buf, '\0', 1);
+  chan->buf_size = num;
+  return chan;
+}
+
+void channel_destroy(channel chan) {
+  if (chan != NULL) {
+    if (chan->buf != NULL) {
+      free(chan->buf);
+    }
+    free(chan);
+  }
+}
+
+int channel_write(channel chan, const void *data, int num) {
+  if (chan == NULL) {
+    return ERROR_WRITE_TO_NULL_CHANNEL;
+  }
+
+  if (chan->buf == NULL) {
+    return ERROR_WRITE_TO_NULL_BUFFER;
+  }
+
+  void *first_NUL = memchr(chan->buf, '\0', chan->buf_size);
+  if (first_NUL == NULL) {
+    /* Buffer appears to be full */
+    return 0;
+  }
+
+  /* How much space do we have? */
+  int free_space_len = (chan->buf + chan->buf_size - first_NUL);
+  if (num < free_space_len) {
+    memcpy(first_NUL, data, num);
+    memset(first_NUL + num + 1, '\0', 1);
+    return num;
+  }
+
+  memcpy(first_NUL, data, free_space_len);
+  return free_space_len;
+}
+
+void *channel_read(channel chan, int num) {
+  return NULL;
+}
+
 int get_payload_size(char *payload) {
   return (int)strlen(payload); /* Don't do this in real code */
 }

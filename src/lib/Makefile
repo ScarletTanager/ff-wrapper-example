@@ -5,7 +5,9 @@ RM=/bin/rm
 SRC_FILES=proto.c
 OBJECT_FILES=*.o
 LIB_FILES=*.so
-LD_DIRS=-L . -L /usr/local/homebrew/lib
+HOMEBREWLIB=/usr/local/homebrew/lib
+CGREENDL=libcgreen.1.dylib
+LD_DIRS=-L . -L $(HOMEBREWLIB)
 LD_LIBS=-lproto -lcgreen
 OBJS_TEST=all_tests.o proto_test.o
 INCLUDE_PATHS=/usr/local/homebrew/include
@@ -36,3 +38,9 @@ proto_test.o: proto_test.c
 
 all_tests: all_tests.o proto_test.o libproto.so
 	$(CC) $(OBJS_TEST) $(LD_FLAGS_TEST) -o all_tests
+	# This is very MacOS-specific
+	install_name_tool -change @rpath/$(CGREENDL) $(HOMEBREWLIB)/$(CGREENDL) all_tests
+
+.PHONY: test
+test: all_tests
+	./all_tests
