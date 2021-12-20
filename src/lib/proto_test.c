@@ -104,8 +104,9 @@ Ensure(Proto, read_removes_only_read_bytes_from_channel) {
 Ensure(Proto, read_zero_bytes_leaves_channel_untouched) {
   channel chan = channel_create(CHANNEL_SIZE);
   channel_write(chan, DATA_SHORT, strlen(DATA_SHORT));
-  channel_read(chan, 0);
-  void *data = channel_read(chan, strlen(DATA_SHORT));
+  void *data = channel_read(chan, 0);
+  assert_that(data, is_null);
+  data = channel_read(chan, strlen(DATA_SHORT));
   channel_destroy(chan);
   int are_same = memcmp(data, DATA_SHORT, strlen(DATA_SHORT));
   assert_that(are_same, is_equal_to(0));

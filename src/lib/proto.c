@@ -50,23 +50,21 @@ void *channel_read(channel chan, int num) {
   /* Is there data to be read? */
   void *first_NUL = memchr(chan->buf, '\0', chan->buf_size);
 
+  /* If channel is empty, bail.  If the read is for 0 bytes, bail. */
   if ((first_NUL == chan->buf) || (num == 0)) {
     return NULL;
   }
 
   int data_len, remaining_len, currently_used = first_NUL - chan->buf;
   void *data;
-  if (currently_used < num) {
-    data_len = currently_used;
-  } else {
-    data_len = num;
-  }
-
+  /* Ensure we never actually read more than the channel contains */
+  data_len = (currently_used < num ? currently_used : num);
   remaining_len = currently_used - data_len;
 
   /* Read and shift */
   data = read_data(chan, data_len);
   memmove(chan->buf, chan->buf + data_len, remaining_len);
+  /* This is safe because we only get here after reading > 0 bytes */
   memset(chan->buf + remaining_len, '\0', 1);
 
   return data;
