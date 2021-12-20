@@ -1,5 +1,7 @@
 #include "proto.h"
 
+void *read_data(channel chan, int num);
+
 channel channel_create(int num) {
   channel chan = (channel)malloc(sizeof(struct proto_channel));
   chan->buf = malloc(num);
@@ -45,7 +47,34 @@ int channel_write(channel chan, const void *data, int num) {
 }
 
 void *channel_read(channel chan, int num) {
-  return NULL;
+  /* Is there data to be read? */
+  void *first_NUL = memchr(chan->buf, '\0', chan->buf_size);
+
+  if ((first_NUL == chan->buf) || (num == 0)) {
+    return NULL;
+  }
+
+  int data_len, remaining_len, currently_used = first_NUL - chan->buf;
+  void *data;
+  if (currently_used < num) {
+    data_len = currently_used;
+  } else {
+    data_len = num;
+  }
+
+  remaining_len = currently_used - data_len;
+
+  /* Read and shift */
+  data = read_data(chan, data_len);
+  memmove(chan->buf, chan->buf + data_len, remaining_len);
+  memset(chan->buf + remaining_len, '\0', 1);
+
+  return data;
+}
+
+void *read_data(channel chan, int num) {
+  void *data = malloc(num);
+  return memcpy(data, chan->buf, num);
 }
 
 int get_payload_size(char *payload) {
